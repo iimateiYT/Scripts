@@ -1,3 +1,5 @@
+-- El Goblino
+
 local Players = game:GetService("Players")
 local Equipped = false
 local Plr = Players.LocalPlayer
