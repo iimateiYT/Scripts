@@ -1,13 +1,18 @@
 local Tool = game:GetObjects("rbxassetid://13710041979")[1]
+local CustomShop = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Shop%20Items/Source.lua"))()
 local Humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
 local Sound = Instance.new("Sound")
 local Durability
+local MaxDurability
+local RegenAmount = _G.RegenAmount or 0.5
+local SnipSpeed = _G.SnipSpeed or 1.25
 
-Sound.PlaybackSpeed = 1.25
+Sound.PlaybackSpeed = SnipSpeed
 Sound.SoundId = "rbxassetid://9118823101"
 Sound.Parent = workspace
 
 Durability = _G.Durability or 5
+MaxDurability = _G.MaxDurability or 5
 
 if _G.Spawns == true then
 	local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Item%20Spawner/Source.lua"))();
@@ -39,10 +44,25 @@ if _G.Spawns == true then
 	item.Debug.OnPickedUp = function()
 		if game.Players.LocalPlayer.Character:FindFirstChild("Shears") then	
 			game.Players.LocalPlayer.Character.Shears:SetAttribute("Durability", Durability)
-			game.Players.LocalPlayer.Character.Shears:SetAttribute("MaxDurability", Durability)
+			game.Players.LocalPlayer.Character.Shears:SetAttribute("MaxDurability", MaxDurability)
 		elseif game.Players.LocalPlayer.Backpack:FindFirstChild("Shears") then
 			game.Players.LocalPlayer.Backpack.Shears:SetAttribute("Durability", Durability)
-			game.Players.LocalPlayer.Backpack.Shears:SetAttribute("MaxDurability", Durability)
+			game.Players.LocalPlayer.Backpack.Shears:SetAttribute("MaxDurability", MaxDurability)
+		end
+
+		while wait(_G.RegenSpeed or 1) do
+			if _G.Regens == true then
+				if game.Players.LocalPlayer.Character:FindFirstChild("Shears") then
+					local shears = game.Players.LocalPlayer.Character.Shears
+					local currentDurability = shears:GetAttribute("Durability") or 0
+					local maxDurability = shears:GetAttribute("MaxDurability") or 0
+
+					if currentDurability and maxDurability and currentDurability <= maxDurability then
+						local newDurability = currentDurability + RegenAmount
+						shears:SetAttribute("Durability", newDurability)
+					end
+				end
+			end
 		end
 	end;
 
@@ -51,9 +71,11 @@ if _G.Spawns == true then
 
 	item.Debug.OnActivated = function()
 		if game.Players.LocalPlayer.Character.Shears:GetAttribute("Durability") == 0 then
-			game.Players.LocalPlayer.Character.Shears:Destroy()
+			if _G.InfiniteUses == false then
+				game.Players.LocalPlayer.Character.Shears:Destroy()
+			end
 		end
-		Durability -= 0.25
+		Durability -= _G.DurabilityTakenEachSnip or 0.25
 		game.Players.LocalPlayer.Character.Shears:SetAttribute("Durability", Durability)
 
 		local Use = game.Players.LocalPlayer.Character.Shears.Animations.use
@@ -95,8 +117,6 @@ if _G.Spawns == true then
 	return
 end
 
-local CustomShop = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Shop%20Items/Source.lua"))()
-
 if game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui").MainUI.ItemShop.Visible == true then
 	CustomShop.CreateItem(Tool, {
 		Title = "Shears",
@@ -111,14 +131,17 @@ end
 
 Tool.Parent = game.Players.LocalPlayer.Backpack
 Tool:SetAttribute("Durability", Durability)
-Tool:SetAttribute("MaxDurability", Durability)
+Tool:SetAttribute("MaxDurability", MaxDurability)
+
 Tool.Activated:Connect(function()
-	if Tool:GetAttribute("Durability") == 0 then
-		Tool:Destroy()
+	if Tool:GetAttribute("Durability") <= 0 then
+		if _G.InfiniteUses == false then
+			Tool:Destroy()
+		end
 	end
-	Durability -= 0.25
+	Durability -= _G.DurabilityTakenEachSnip or 0.25
 	Tool:SetAttribute("Durability", Durability)
-	
+
 	local Use = Tool.Animations.use
 	local UseTrack = Humanoid:LoadAnimation(Use)
 
@@ -151,8 +174,19 @@ Tool.Equipped:Connect(function()
 
 	IdleTrack:Play()
 end)
+
 Tool.Unequipped:Connect(function()
-	for _,anim in pairs(Humanoid.Animator:GetPlayingAnimationTracks()) do
-		anim:Stop()
+	for _, v in pairs(Humanoid.Animator:GetPlayingAnimationTracks()) do
+		v:Stop()
 	end
 end)
+
+while wait(_G.RegenSpeed or 1) do
+	if _G.Regens == true then
+		if Tool:GetAttribute("Durability") <= Tool:GetAttribute("MaxDurability") then
+			local currentDurability = Tool:GetAttribute("Durability") or 0
+			local newDurability = currentDurability + RegenAmount
+			Tool:SetAttribute("Durability", newDurability)
+		end
+	end	
+end
