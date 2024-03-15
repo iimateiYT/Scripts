@@ -1,5 +1,7 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-
+if _G.IY then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end
+	
 local screen_gui = Instance.new("ScreenGui")
 screen_gui.IgnoreGuiInset = false
 screen_gui.ResetOnSpawn = false
@@ -74,22 +76,23 @@ local uistroke_2 = Instance.new("UIStroke")
 uistroke_2.Thickness = 2.5
 uistroke_2.Parent = text_label
 
-local bypassed = false
-
 function sound()
 	local notification = Instance.new("Sound", workspace)
-	notification.SoundId = "rbxassetid://3398620867"
+	notification.SoundId = "rbxassetid://5153734608"
 	notification.Parent = workspace
 	notification:Play()
 end
 
-function notify(entity, bypassed)
+function notify(entity, bypassed, other)
 	sound()
 	local tem = template:Clone()
 	tem.Visible = true
 	tem.TextLabel.Text = entity .. " Has just spawned!"
 	if bypassed then
 		tem.TextLabel.Text = entity .. " Has been bypassed!"
+	end
+	if other then
+		tem.TextLabel.Text = other
 	end
 	tem.Parent = frame
 	game:GetService("TweenService"):Create(tem.UIScale, TweenInfo.new(0.25, Enum.EasingStyle.Sine), { Scale = 1 }):Play()
@@ -103,6 +106,27 @@ function notify(entity, bypassed)
 	end)
 end
 
+if _G.Executed then
+	notify("", nil, "Already Executed!")
+	return
+end
+_G.Executed = true
+
+local bypassed = false
+
+function selection(child)
+	local hi = Instance.new("Highlight")
+	hi.Parent = child
+	hi.Adornee = child
+	hi.OutlineColor = Color3.fromRGB(161, 0, 0)
+	hi.FillColor = Color3.fromRGB(255, 0, 0)
+	hi.FillTransparency = 0.75
+	if child:IsA("Part") then
+		child.Color = Color3.fromRGB(0, 0, 0)
+		child.Transparency = 0
+	end
+end
+
 workspace.ChildAdded:Connect(function(child)
 	if child.Name == "BackdoorLookman" then
 		if bypassed then
@@ -110,26 +134,36 @@ workspace.ChildAdded:Connect(function(child)
 			child.Parent = game:GetService("Debris")
 			return
 		end
-		notify("Backdoor Lookman")
+		notify("👁️ Backdoor Lookman")
+		selection(child:WaitForChild("Core"))
 	elseif child.Name == "BackdoorRush" then
-		notify("Backdoor Rush")
+		notify("💨 Backdoor Rush")
+		selection(child:WaitForChild("Main"))
 	end
 end)
 
-spawn(function()
-	local mt = getrawmetatable(game);
-	local old = mt.__namecall
-	setreadonly(mt,false)
-	mt.__namecall = newcclosure(function(remote,...)
-		args = {...}
-		method = tostring(getnamecallmethod())
-		if method == "FireServer" and tostring(remote) == "MotorReplication" then
-			args[2] = 90
-			return old(remote,unpack(args))
-		end
-		return old(remote,...)
-	end)
-	setreadonly(mt,true)
-	bypassed = true
-	notify("Backdoor Lookman", true)
+for _, v in pairs(workspace.CurrentRooms:GetDescendants()) do
+	if v:IsA("BasePart") and v.Name == "Door" and v.Parent.Name == "Door" then
+		selection(v)
+	end
+end
+
+workspace.CurrentRooms.ChildAdded:Connect(function(child)
+	task.wait(1)
+	if child:FindFirstChild("Door") and child.Door:FindFirstChild("Door") then
+		selection(child.Door.Door)
+	end
 end)
+
+notify("", nil, "🐦 Script made by: kiwib.")
+
+if _G.Bypass then
+	bypassed = true
+	notify("👁️ Backdoor Lookman", true)
+	notify("⚡ Haste", true)
+	game:GetService("ReplicatedStorage").FloorClientStuff.ClientRemote.Haste:Destroy()
+	while true do
+		task.wait()
+		game:GetService("ReplicatedStorage").RemotesFolder.MotorReplication:FireServer(0, 90, 0, false)
+	end
+end
