@@ -141,6 +141,9 @@ function notify(entity, bypassed, other)
 	spawn(function()
 		while true do
 			task.wait(0.01)
+			if not tem or not tem:FindFirstChild("UIStroke") or not tem:FindFirstChild("UIStroke"):FindFirstChild("UIGradient") then
+				return
+			end
 			tem.UIStroke.UIGradient.Rotation += 1
 		end
 	end)
@@ -148,6 +151,9 @@ function notify(entity, bypassed, other)
 	spawn(function()
 		while true do
 			task.wait(0.01)
+			if not tem or not tem:FindFirstChild("UIGradient") then
+				return
+			end
 			if tem.UIGradient.Offset.X >= 1 then
 				tem.UIGradient.Offset = Vector2.new(-1, 0)
 			end
@@ -179,10 +185,6 @@ function selection(child)
 	end
 end
 
-if workspace.CurrentRooms:FindFirstChild("0") then
-	selection(workspace.CurrentRooms["0"].Assets.KeyObtain)
-end
-
 workspace.ChildAdded:Connect(function(child)
 	if child.Name == "BackdoorLookman" then
 		if bypassed then
@@ -202,14 +204,25 @@ for _, v in pairs(workspace.CurrentRooms:GetDescendants()) do
 	if v:IsA("BasePart") and v.Name == "Door" and v.Parent.Name == "Door" or v.Name == "TimerLever" then
 		selection(v)
 	end
+	if v.Name == "KeyObtain" then
+		selection(v)
+	end
 end
 
 workspace.CurrentRooms.ChildAdded:Connect(function(child)
+	spawn(function()
+		task.wait(5)
+		if child.Assets:FindFirstChild("TimerLever") then
+			selection(child.Assets.TimerLever)
+			notify("", nil, "🎚️ Lever found!")
+		end
+	end)
 	task.wait(1)
 	if child:FindFirstChild("Door") and child.Door:FindFirstChild("Door") then
 		selection(child.Door.Door)
-	elseif child.Assets:FindFirstChild("TimerLever") then
-		selection(child.Assets.TimerLever)
+	end
+	if child.Assets:FindFirstChild("KeyObtain") then
+		selection(child.Assets.KeyObtain)
 	end
 end)
 
